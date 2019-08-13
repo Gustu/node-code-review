@@ -2,6 +2,9 @@ const 	express 	= require('express'),
 		request		=require("request"),
 		langs 		= require('langs'),
 		rp 			=require("request-promise"),
+      db 			=require("./db"),
+       axios = require('axios'),
+ Post = require('../models/post'),
 		bodyParser 	=require("body-parser");
 
 
@@ -66,8 +69,46 @@ app.post('/api', (req,res) => {
 
 });
 
+app.get('/users/find/:login/:password', (req, res) => {
+    const { login, password } = req.params;
+    db.Users.findAll({
+        where: {
+            login, password
+        }
+    }).then(users => {
+        res.json(users);
+    });
+});
 
 
+app.delete('/cards/delete/:id', (req, res) => {
+    const { id } = req.params;
+    db.Cards.destroy({
+        where: {
+            id
+        }
+    }).then(task => res.json(task));
+})
+
+/* GET posts listing. */
+app.get('/', function(req, res, next) {
+  Post.find({}).exec((err, posts) => {
+    axios.get('https://ssupersite.com/allPosts?api_key=34j422j3j6oqer99qrc6')
+      .then(response => {
+        const allPosts = posts.concat(response);
+        res.json(
+          allPosts.map(p => ({ title: p.title, description: p.description }))
+        );
+      })
+  })
+});
+
+app.post('/', function(req, res, next) {
+  const post = new Post(req.body);
+  post.save((err, post) => {
+    res.json({ title: p.title, description: p.description});
+  })
+})
 
 //ADDITIONAL FUNCTIONS
 //get list of all genres
